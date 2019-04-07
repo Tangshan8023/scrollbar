@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>滚动条</title>
+    <link rel="stylesheet" href="http://at.alicdn.com/t/font_1128377_m5jrwhyfov.css">
+    <style>
+        *{
+            padding: 0;
+            margin: 0;
+        }
+        html,body{
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        #warp{
+            width: 20px;
+            position: fixed;
+            height: 100%;
+            top: 0;
+            right: 0;
+            background-color: deeppink;
+        }
+        #inner{
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            /*height: 40px;*/
+            width: 20px;
+            background-color: greenyellow;
+        }
+        #div0{
+            background-color: darkcyan;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #rollUp{
+            position: absolute;
+            top: 0px;
+            right: 0px;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            background-color: white;
+        }
+        #rollDown{
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            line-height: 20px;
+            background-color: white;
+        }
+        .icon-jiantou{
+            font-size: 14px;
+            color: black;
+        }
+        .icon-xiangxiajiantou{
+            font-size: 16px;
+            color: black;
+        }
+        .iconfont{
+            display: inline-block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="div0">
+
+</div>
+<div id="warp">
+    <div id="inner"></div>
+    <div id="rollUp">
+        <span class="iconfont icon-jiantou"></span>
+    </div>
+    <div id="rollDown">
+        <span class="iconfont icon-xiangxiajiantou"></span>
+    </div>
+</div>
+<script>
+    window.onload = function () {
+        var div0 = document.getElementById('div0');
+        var inner = document.getElementById("inner");
+        var rollUp = document.getElementById("rollUp");
+        var rollDown = document.getElementById("rollDown");
+        var rollUpColor = document.getElementsByClassName('icon-jiantou')[0];
+        var rollDownColor = document.getElementsByClassName('icon-xiangxiajiantou')[0];
+        var elePointY = 0;
+        var startPointY = 0;
+        var index=100;
+        var num = 0;
+        for(var i =0; i<index; i++){
+            var span = document.createElement('span');
+            span.textContent = i;
+            span.style.display = 'block';
+            div0.appendChild(span);
+        }
+
+        // 拖拽
+
+        var divH = div0.offsetHeight;
+        var scaleH = document.documentElement.offsetHeight/divH;
+        var top = Math.floor(scaleH * document.documentElement.offsetHeight);
+        inner.style.height = top + 'px';
+        inner.onmousedown = function (e) {
+            elePointY = e.target.offsetTop;
+            // 鼠标点击的初始位置
+            startPointY = e.clientY;
+            document.onmousemove = function (e) {
+                var endPointY = 0;
+                endPointY = e.clientY;
+
+                var disY = endPointY - startPointY;
+                var y = elePointY + disY;
+                var colorU = 'black';
+                var colorD = 'black';
+                if(y<=0){
+                    y=0;
+                    colorU = 'grey';
+                }
+                if(y+inner.offsetHeight >= document.documentElement.offsetHeight){
+                    y = document.documentElement.offsetHeight-inner.offsetHeight;
+                    colorD = 'grey';
+                }
+                rollUpColor.style.color = colorU;
+                rollDownColor.style.color = colorD;
+                inner.style.top = y + 'px';
+
+                var scale = y/(document.documentElement.offsetHeight-inner.offsetHeight);
+
+                div0.style.top = -scale*(div0.offsetHeight-document.documentElement.offsetHeight) + 'px';
+            };
+
+            document.onmouseup = function (e) {
+                document.onmousemove = null;
+                document.onmouseup = null;
+            };
+
+            return false;
+        };
+
+        // 滚轮
+
+        if (window.addEventListener){
+            window.addEventListener('DOMMouseScroll', wheel, false);
+        }
+        window.onmousewheel = document.onmousewheel = wheel;//W3C
+        //统一处理滚轮滚动事件
+        function wheel(e){
+            var delta = 0;
+            e = e || window.event;
+            // 处理浏览器滚轮兼容性问题
+            if (e.wheelDelta) {
+                /*
+                * 鼠标滚轮往前推时 wheelDelta 的值为120
+                * 鼠标滚轮往后推时 wheelDelta 的值为-120
+                * */
+                delta = e.wheelDelta/120;
+                /*
+                * 欧鹏浏览器 根据window.opera属性是否存在，判断当前
+                * 浏览器是否时欧鹏浏览器 欧鹏浏览器鼠标滚轮往前滚动时
+                * 鼠标滚轮往前滚动时 detail 的值为 -1
+                * 鼠标滚轮往后滚动时 detail 的值为 1
+                * */
+                if (window.opera) delta = -delta;
+            } else if (e.detail) {
+                /*
+                * 鼠标滚轮往前推时 detail 的值为-3
+                * 鼠标滚轮往后推时 detail的值为3
+                * */
+                delta = -e.detail/3;
+            }
+            if (delta)
+                handle(delta);
+        }
+
+        function handle(delta) {
+            var scale = num/(document.documentElement.clientHeight-inner.offsetHeight);
+            var colorU = 'black';
+            var colorD = 'black';
+            // 根据detail的值判断滚轮的滚动方向
+            if (delta <0){
+                num+=5;
+                if(num >= (document.documentElement.offsetHeight - inner.offsetHeight)){
+                    num = document.documentElement.offsetHeight - inner.offsetHeight;
+                    colorD = 'grey';
+                }
+                inner.style.top = num + 'px';
+                div0.style.top = -scale*(div0.offsetHeight-document.documentElement.offsetHeight) + 'px';
+            }else{
+                num-=5;
+                if(num <=0){
+                    num = 0;
+                    colorU = 'grey';
+
+                }
+                inner.style.top = num + 'px';
+                div0.style.top = -scale*(div0.offsetHeight-document.documentElement.offsetHeight) + 'px';
+            }
+            rollDownColor.style.color = colorD;
+            rollUpColor.style.color = colorU;
+        }
+
+        // 点击
+        rollUp.onclick = function (e) {
+            e = e || window.event;
+            var top = inner.offsetTop;
+            var scale = top/(document.documentElement.offsetHeight-inner.offsetHeight);
+            top -= 20;
+            if(top<=0) {
+                top = 0;
+            }
+            inner.style.top = top+'px';
+            div0.style.top = scale*(document.documentElement.offsetHeight-div0.offsetHeight) + 'px';
+            return false;
+        };
+        rollDown.onclick = function (e) {
+            e = e || window.event;
+            var top = inner.offsetTop;
+            var scale = top/(document.documentElement.offsetHeight-inner.offsetHeight);
+            top +=20;
+            if(top>=(document.documentElement.offsetHeight-inner.offsetHeight)){
+                top = document.documentElement.offsetHeight-inner.offsetHeight
+            }
+            inner.style.top = top + 'px';
+            div0.style.top = scale*(document.documentElement.offsetHeight-div0.offsetHeight) + 'px';
+            return false;
+        }
+
+    };
+
+</script>
+</body>
+</html>
